@@ -1,0 +1,45 @@
+experiment:
+  name: spagramor_s2e15
+  dataset: S2-E15
+  seed: 0
+
+data:
+  root: /kaggle/input/datasets/wuvdji/smgc-data/
+  label_key: Spatial_Label
+  expected_modalities: [RNA, ATAC]
+  spatial_key: spatial
+  spatial_row_key: array_row
+  spatial_col_key: array_col
+  matrix_source: X
+  n_pca_components: 100
+
+preprocessing: {log1p: false, standardize: false}
+graphs:
+  spatial: {k: 3, include_self: false, symmetrize: true}
+  feature: {k: 20, symmetrize: true, clip_negative: true}
+model:
+  gcn_hidden_dim: 32
+  fine_dim: 128
+  coarse_dim: 16
+  representation_dim: 16
+  fusion_hidden_dim: 64
+  num_clusters: 15
+  tau_s: 0.3
+  cluster_temperature: 0.3
+  cluster_regularization_weight: 1.0
+training:
+  epochs: 400
+  warm_up_epochs: 10
+  lr: 0.001
+  weight_decay: 0.00001
+  cluster_head_lr_multiplier: 8.0
+spatial: {enabled: false, consistency_weighting: false, negative_filter: false}
+loss: {lambda_rec: 1.0, lambda_mgcl: 3.0, lambda_cluster: 0.1, lambda_spatial: 0.0}
+ablation: {reconstruction: true, sample_contrastive: true, cluster_contrastive: true, multigranularity_mode: full, view_weighting: adaptive}
+readout:
+  mode: modality_aware
+  bsrr: {enabled: true, spatial_k: 3}
+  adt: {method: kmeans, n_init: 20, random_state: 0}
+  atac: {method: spectral, latent_k: 10, assign_labels: kmeans, n_init: 20, random_state: 0, eigen_solver: arpack}
+evaluation: {nmi_average_method: max, summary_ddof: 0}
+output: {root: results}
